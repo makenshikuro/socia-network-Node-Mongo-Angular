@@ -4,6 +4,7 @@
   "description": "Web Application project like Twitter based in NodeJS, MongoDB and Angular 5+",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Adrian Bustos",
