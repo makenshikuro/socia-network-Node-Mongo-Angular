@@ -1,0 +1,23 @@
+{
+  "name": "socia-network-node-mongo-angular",
+  "version": "1.0.0",
+  "description": "Web Application project like Twitter based in NodeJS, MongoDB and Angular 5+",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adrian Bustos",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.18.3",
+    "connect-multiparty": "^2.1.1",
+    "express": "^4.16.3",
+    "jwt-simple": "^0.5.1",
+    "moment": "^2.22.2",
+    "mongoose": "^5.2.9"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.3"
+  }
+}
