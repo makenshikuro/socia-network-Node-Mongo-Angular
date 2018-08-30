@@ -4,6 +4,7 @@ var mongoosePaginate = require('mongoose-pagination');
 var fs = require('fs');
 
 var User = require('../models/user');
+var Follow = require('../models/follow');
 var jwt = require('../services/jwt');
 var path = require('path');
 
@@ -112,13 +113,42 @@ function getUser(req, res) {
 			});
 		}
 		if (!user){
+
 			return res.status(404).send({message: 'El usuario no existe'});
 		}
 
-		user.password = undefined;
-		return res.status(200).send({user});
+		followThisUser(req.user.sub, userId).then((value) =>{
+
+			user.password = undefined;
+			return res.status(200).send({
+				user,
+				following: value.following,
+				followed: value.followed
+			});
+
+		});
+		
+			
+		
+		
 	});
 }
+
+async function followThisUser(identity_user_id, user_id){
+	var following = await Follow.findOne({'user':identity_user_id, 'followed':user_id}).exec((err,follow) => {
+						if(err)return handleError(err);
+						return follow;
+					});
+	var followed = await Follow.findOne({'user':user_id, 'followed':identity_user_id}).exec((err,follow) => {
+						if(err)return handleError(err);
+						return follow;
+					});
+	return {
+		following: following,
+		followed: followed
+	}
+}
+
 // Devolver listado de users paginados
 
 function getUsers(req, res){
@@ -135,15 +165,51 @@ function getUsers(req, res){
 
 		if (!users) return res.status(404).send({message: 'No hay usuarios disponibles'});
 
-		return res.status(200).send({
-			users,
-			total,
-			pages: Math.ceil(total/itemsPerPage)
+		followUserIds(identity_user_id).then((value) =>{
+				return res.status(200).send({
+				users,
+				users_following: value.following,
+				users_follow_me: value.followed,
+				total,
+				pages: Math.ceil(total/itemsPerPage)
+			});
 		});
+		
 
 
 	});
 }
+//******
+async function followUserIds(user_id){
+	var following = await Follow.find({"user": user_id}).select({'_id':0,'__v':0, 'user':0}).exec((err,follows) =>{
+		return follows;
+	});
+
+	var followed = await Follow.find({"followed": user_id}).select({'_id':0,'__v':0, 'followed':0}).exec((err,follows) =>{
+		return follows;
+	});
+
+	//Procesar following ids
+	var following_clean = [];
+
+	following.forEach((follow) => {
+		following_clean.push(follow.followed);
+	});
+
+	//Procesar followed ids
+	var followed_clean = [];
+
+	followed.forEach((follow) => {
+		followed_clean.push(follow.followed);
+	});
+
+	return{
+		following: following_clean,
+		followed: followed_clean
+	}
+
+}
+//*******
 
 function updateUser(req, res) {
 	var userId = req.params.id;
