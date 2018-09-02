@@ -5,6 +5,7 @@ var fs = require('fs');
 
 var User = require('../models/user');
 var Follow = require('../models/follow');
+var Publication = require('../models/publication');
 var jwt = require('../services/jwt');
 var path = require('path');
 
@@ -13,7 +14,6 @@ function home (req,res){
 		message: 'Hola a todoos'
 	});
 } 
-
 
 function pruebas (req,res){
 	console.log(req.body);
@@ -192,14 +192,14 @@ async function followUserIds(user_id){
 	//Procesar following ids
 	var following_clean = [];
 
-	following.forEach((follow) => {
+	following.forEach((follow) =>{
 		following_clean.push(follow.followed);
 	});
 
 	//Procesar followed ids
 	var followed_clean = [];
 
-	followed.forEach((follow) => {
+	followed.forEach((follow) =>{
 		followed_clean.push(follow.followed);
 	});
 
@@ -208,6 +208,40 @@ async function followUserIds(user_id){
 		followed: followed_clean
 	}
 
+}
+
+function getCounters(req,res){
+	var userId = req.user.sub;
+
+	if(req.params.id){
+		userId = req.params.id;
+	}
+
+	getCountFollow(userId).then((value)=>{
+			return res.status(200).send(value);
+		});
+}
+
+async function getCountFollow(user_id){
+	var following = await Follow.count({'user': user_id}).exec((err,count) =>{
+		if (err) return handleError(err);
+		return count;
+	});
+
+	var followed = await Follow.count({'followed':user_id}).exec((err,count) =>{
+		if (err) return handleError(err);
+		return count;
+	});
+
+	var publications = await Publication.count({"user":user_id}).exec((err,count)=>{
+		if (err) return handleError(err);
+		return count;
+	});
+	return{
+		following: following,
+		followed: followed,
+		publications: publications
+	}
 }
 //*******
 
@@ -306,6 +340,7 @@ module.exports = {
 	loginUser,
 	getUser,
 	getUsers,
+	getCounters,
 	updateUser,
 	uploadImage,
 	getImageFile
